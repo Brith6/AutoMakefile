@@ -8,7 +8,7 @@
 
 evit="total*"
 while read line; do
-    if [[ $line =~ $1 && $line != $evit ]]; then
+    if [[ $(echo ${line} | cut -d ' ' -f 9) = $1* && $line != $evit ]]; then
         echo $line | cut -d " " -f 3 | tr -d '\n'
         printf '\t\t'
         echo $line | cut -d " " -f 9

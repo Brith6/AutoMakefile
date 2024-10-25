@@ -5,28 +5,51 @@
 ## automakefile project
 ##
 
-Makefile=${1:0:-6}"Makefile"
+if [[ -z $1 ]]; then
+    exit 84
+elif [[ ${1: -6} != "config" ]]; then
+    exit 84
+elif ! [[ -e $1 ]]; then
+    exit 84
+fi
+
 contents=()
+src_=()
 while read line; do
     contents+=("$line"$'\0')
+    if [ $(echo ${line} | cut -d ';' -f 1) == "PROJECT_DIR" ]; then
+        proj=$(echo ${line} | cut -d ';' -f 2)
+    elif [ $(echo ${line} | cut -d ';' -f 1) == "SOURCES_DIR" ]; then
+        src=$(echo ${line} | cut -d ';' -f 2)
+    fi
 done < $1
 
+if [[ -z $proj ]]; then
+    exit 84
+fi
+Makefile=$proj/"Makefile"
 > $Makefile
 for li in "${contents[@]}"; do
-    if [ ${li:0:4} == "EXEC" ]; then
-	bin=${li:5}
+    tag=$(echo ${li} | cut -d ';' -f 1)
+    if [ $tag == "EXEC" ]; then
 	echo "EXEC ="$'\t'${li:5}$'\n' >> $Makefile
-    elif [ ${li:0:2} == "CC" ]; then
+    elif [ $tag == "CC" ]; then
 	echo "CC ="$'\t'${li:3}$'\n' >> $Makefile
-    elif [ ${li:0:6} == "CFLAGS" ]; then
+    elif [ $tag == "CFLAGS" ]; then
         echo "CFLAGS ="$'\t'${li:7}$'\n' >> $Makefile
-    elif [ ${li:0:7} == "LDFLAGS" ]; then
+    elif [ $tag == "LDFLAGS" ]; then
         echo "LDFLAGS ="$'\t'${li:8}$'\n' >> $Makefile
-    elif [ ${li:0:8} == "LIBS_DIR" ]; then
-        echo "LIBS_DIR ="$'\t'"./"${li:9}$'\n' >> $Makefile
+    elif [ $tag == "LIBS_DIR" ]; then
+        echo "LIBS_DIR ="$'\t'$proj/${li:9}/$'\n' >> $Makefile
+    elif [ $tag == "HEADERS_DIR" ]; then
+        echo "HEADERS_DIR ="$'\t'$proj/${li:12}/$'\n' >> $Makefile
+    elif [[ $tag =~ ".c" ]]; then
+	src_+=($'\t'$src/$tag$' \\'$'\n')
     fi
 done
 
-echo "clean :"$'\n'$'\t'"rm -f "$bin$'\n' >> $Makefile
+echo "SRC =""${src_[@]}" >> $Makefile
+echo "all :"$'\n'$'\t'"\$(CC) \$(CFLAGS) \$(LDFLAGS) -o \$(EXEC) -I \$(HEADERS_DIR) -L \$(LIBS_DIR) \$(SRC)"$'\n' >> $Makefile
+echo "clean :"$'\n'$'\t'"rm -f \$(EXEC)"$'\n' >> $Makefile
 echo "fclean : clean"$'\n' >> $Makefile
 echo "re : fclean all"$'\n' >> $Makefile

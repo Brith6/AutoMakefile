@@ -35,21 +35,34 @@ for li in "${contents[@]}"; do
 	echo "EXEC ="$'\t'${li:5}$'\n' >> $Makefile
     elif [ $tag == "CC" ]; then
 	echo "CC ="$'\t'${li:3}$'\n' >> $Makefile
+    elif [ $tag == "ZIP" ]; then
+        echo "ZIP ="$'\t'${li:4}$'\n' >> $Makefile
+    elif [ $tag == "UNZIP" ]; then
+        echo "UNZIP ="$'\t'${li:6}$'\n' >> $Makefile
     elif [ $tag == "CFLAGS" ]; then
         echo "CFLAGS ="$'\t'${li:7}$'\n' >> $Makefile
     elif [ $tag == "LDFLAGS" ]; then
         echo "LDFLAGS ="$'\t'${li:8}$'\n' >> $Makefile
+    elif [ $tag == "ZIPFLAGS" ]; then
+        echo "ZIPFLAGS ="$'\t'${li:9}$'\n' >> $Makefile
+    elif [ $tag == "UNZIPFLAGS" ]; then
+        echo "UNZIPFLAGS ="$'\t'${li:11}$'\n' >> $Makefile
     elif [ $tag == "LIBS_DIR" ]; then
-        echo "LIBS_DIR ="$'\t'$proj/${li:9}/$'\n' >> $Makefile
+        echo "LIBS_DIR ="$'\t'$src/${li:9}/$'\n' >> $Makefile
     elif [ $tag == "HEADERS_DIR" ]; then
-        echo "HEADERS_DIR ="$'\t'$proj/${li:12}/$'\n' >> $Makefile
+        echo "HEADERS_DIR ="$'\t'$src/${li:12}/$'\n' >> $Makefile
+    elif [ $tag == "BCK_DIR" ]; then
+        echo "BCK_DIR ="$'\t'$src/${li:8}/$'\n' >> $Makefile
     elif [[ $tag =~ ".c" ]]; then
 	src_+=($'\t'$src/$tag$' \\'$'\n')
     fi
 done
 
 echo "SRC =""${src_[@]}" >> $Makefile
-echo "all :"$'\n'$'\t'"\$(CC) \$(CFLAGS) \$(LDFLAGS) -o \$(EXEC) -I \$(HEADERS_DIR) -L \$(LIBS_DIR) \$(SRC)"$'\n' >> $Makefile
-echo "clean :"$'\n'$'\t'"rm -f \$(EXEC)"$'\n' >> $Makefile
-echo "fclean : clean"$'\n' >> $Makefile
+echo "all :"$'\n\t'"\$(CC) \$(CFLAGS) \$(LDFLAGS) -o \$(EXEC) -I \$(HEADERS_DIR) -L \$(LIBS_DIR) \$(SRC)"$'\n' >> $Makefile
+echo "clean :"$'\n\t'"rm -f \$(EXEC)"$'\n' >> $Makefile
+echo "fclean : clean"$'\n\t'"rm -f *~ *# *.gcno"$'\n' >> $Makefile
 echo "re : fclean all"$'\n' >> $Makefile
+echo "archive :"$'\n\t'"\$(ZIP) \$(ZIPFLAGS) $proj.tar $src/*.c"$'\n\t'"cp $proj.tar \$(BCK_DIR)"$'\n\t'"echo \"$proj.tar file generated.\""$'\n' >> $Makefile
+echo "revert :"$'\n\t'"\$(UNZIP) \$(UNZIPFLAGS) \$(BCK_DIR)*.tar"$'\n' >> $Makefile
+echo "delete :"$'\n\t'"rm -f \$(BCK_DIR)*.tar"$'\n' >> $Makefile

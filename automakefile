@@ -13,13 +13,14 @@ elif ! [[ -e $1 ]]; then
     exit 84
 fi
 
+echo $'\n' >> $1
 contents=()
 src_=()
 while read line; do
     contents+=("$line"$'\0')
-    if [ $(echo ${line} | cut -d ';' -f 1) == "PROJECT_DIR" ]; then
+    if [[ $(echo ${line} | cut -d ';' -f 1) == "PROJECT_DIR" ]]; then
         proj=$(echo ${line} | cut -d ';' -f 2)
-    elif [ $(echo ${line} | cut -d ';' -f 1) == "SOURCES_DIR" ]; then
+    elif [[ $(echo ${line} | cut -d ';' -f 1) == "SOURCES_DIR" ]]; then
         src=$(echo ${line} | cut -d ';' -f 2)
     fi
 done < $1
@@ -31,27 +32,28 @@ Makefile=$proj/"Makefile"
 > $Makefile
 for li in "${contents[@]}"; do
     tag=$(echo ${li} | cut -d ';' -f 1)
-    if [ $tag == "EXEC" ]; then
+    if [[ $tag == "EXEC" ]]; then
 	echo "EXEC ="$'\t'${li:5}$'\n' >> $Makefile
-    elif [ $tag == "CC" ]; then
+    elif [[ $tag == "CC" ]]; then
 	echo "CC ="$'\t'${li:3}$'\n' >> $Makefile
-    elif [ $tag == "ZIP" ]; then
+    elif [[ $tag == "ZIP" ]]; then
+	zip=${li:4}
         echo "ZIP ="$'\t'${li:4}$'\n' >> $Makefile
-    elif [ $tag == "UNZIP" ]; then
+    elif [[ $tag == "UNZIP" ]]; then
         echo "UNZIP ="$'\t'${li:6}$'\n' >> $Makefile
-    elif [ $tag == "CFLAGS" ]; then
+    elif [[ $tag == "CFLAGS" ]]; then
         echo "CFLAGS ="$'\t'${li:7}$'\n' >> $Makefile
-    elif [ $tag == "LDFLAGS" ]; then
+    elif [[ $tag == "LDFLAGS" ]]; then
         echo "LDFLAGS ="$'\t'${li:8}$'\n' >> $Makefile
-    elif [ $tag == "ZIPFLAGS" ]; then
+    elif [[ $tag == "ZIPFLAGS" ]]; then
         echo "ZIPFLAGS ="$'\t'${li:9}$'\n' >> $Makefile
-    elif [ $tag == "UNZIPFLAGS" ]; then
+    elif [[ $tag == "UNZIPFLAGS" ]]; then
         echo "UNZIPFLAGS ="$'\t'${li:11}$'\n' >> $Makefile
-    elif [ $tag == "LIBS_DIR" ]; then
+    elif [[ $tag == "LIBS_DIR" ]]; then
         echo "LIBS_DIR ="$'\t'$src/${li:9}/$'\n' >> $Makefile
-    elif [ $tag == "HEADERS_DIR" ]; then
+    elif [[ $tag == "HEADERS_DIR" ]]; then
         echo "HEADERS_DIR ="$'\t'$src/${li:12}/$'\n' >> $Makefile
-    elif [ $tag == "BCK_DIR" ]; then
+    elif [[ $tag == "BCK_DIR" ]]; then
         echo "BCK_DIR ="$'\t'$src/${li:8}/$'\n' >> $Makefile
     elif [[ $tag =~ ".c" ]]; then
 	src_+=($'\t'$src/$tag$' \\'$'\n')
@@ -63,6 +65,6 @@ echo "all :"$'\n\t'"\$(CC) \$(CFLAGS) \$(LDFLAGS) -o \$(EXEC) -I \$(HEADERS_DIR)
 echo "clean :"$'\n\t'"rm -f \$(EXEC)"$'\n' >> $Makefile
 echo "fclean : clean"$'\n\t'"rm -f *~ *# *.gcno"$'\n' >> $Makefile
 echo "re : fclean all"$'\n' >> $Makefile
-echo "archive :"$'\n\t'"\$(ZIP) \$(ZIPFLAGS) $proj.tar $src/*.c"$'\n\t'"cp $proj.tar \$(BCK_DIR)"$'\n\t'"echo \"$proj.tar file generated.\""$'\n' >> $Makefile
-echo "revert :"$'\n\t'"\$(UNZIP) \$(UNZIPFLAGS) \$(BCK_DIR)*.tar"$'\n' >> $Makefile
-echo "delete :"$'\n\t'"rm -f \$(BCK_DIR)*.tar"$'\n' >> $Makefile
+echo "archive :"$'\n\t'"\$(ZIP) \$(ZIPFLAGS) $proj.$zip $src/*.c"$'\n\t'"mv $proj.$zip \$(BCK_DIR)"$'\n\t'"echo \"$proj.$zip file generated.\""$'\n' >> $Makefile
+echo "revert :"$'\n\t'"\$(UNZIP) \$(UNZIPFLAGS) \$(BCK_DIR)*.$zip"$'\n' >> $Makefile
+echo "delete :"$'\n\t'"rm -f \$(BCK_DIR)*.$zip"$'\n' >> $Makefile

@@ -54,6 +54,7 @@ for li in "${contents[@]}"; do
     elif [[ $tag == "HEADERS_DIR" ]]; then
         echo "HEADERS_DIR ="$'\t'$src/${li:12}/$'\n' >> $Makefile
     elif [[ $tag == "BCK_DIR" ]]; then
+	bkd=$src/${li:8}
         echo "BCK_DIR ="$'\t'$src/${li:8}/$'\n' >> $Makefile
     elif [[ $tag =~ ".c" ]]; then
 	src_+=($'\t'$src/$tag$' \\'$'\n')
@@ -62,11 +63,14 @@ done
 
 echo "SRC =""${src_[@]}" >> $Makefile
 echo "OBJ ="$'\t'"\$(SRC:.c=.o)"$'\n' >> $Makefile
+> $proj/$src/count
+> $proj/$bkd/count
 echo "\$(EXEC): \$(OBJ)"$'\n\t'"\$(CC) \$(CFLAGS) \$(LDFLAGS) -o \$(EXEC) -I \$(HEADERS_DIR) -L \$(LIBS_DIR) \$(OBJ)"$'\n' >> $Makefile
 echo "all : \$(EXEC)"$'\n' >> $Makefile
 echo "clean :"$'\n\t'"rm -f \$(OBJ)"$'\n' >> $Makefile
 echo "fclean : clean"$'\n\t'"rm -f \$(EXEC)"$'\n\t'"rm -f *~ *# *.gcno *.gcda"$'\n' >> $Makefile
 echo "re : fclean all"$'\n' >> $Makefile
-echo "archive :"$'\n\t'"\$(ZIP) \$(ZIPFLAGS) $proj.$zip $src/*.c"$'\n\t'"mv $proj.$zip \$(BCK_DIR)"$'\n\t'"echo \"$proj.$zip file generated.\""$'\n' >> $Makefile
-echo "revert :"$'\n\t'"\$(UNZIP) \$(UNZIPFLAGS) \$(BCK_DIR)*.$zip"$'\n' >> $Makefile
+echo "archive :"$'\n\t'"echo 1 | tr -d '\n' >> \$(BCK_DIR)count"$'\n\t'"\$(ZIP) \$(ZIPFLAGS) $proj.$zip $src/*.c"$'\n\t'"mv $proj.$zip \$(BCK_DIR)"$'\n\t'"echo \"$proj.$zip file generated.\""$'\n' >> $Makefile
+echo "revert :"$'\n\t'"\$(UNZIP) \$(UNZIPFLAGS) \$(BCK_DIR)*.$zip"$'\n\t'"cp \$(BCK_DIR)count $src"$'\n' >> $Makefile
 echo "delete :"$'\n\t'"rm -f \$(BCK_DIR)*.$zip"$'\n' >> $Makefile
+echo "num :"$'\n\t'"wc -m $src/count | cut -d ' ' -f 1" >> $Makefile

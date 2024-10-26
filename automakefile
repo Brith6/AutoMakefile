@@ -63,7 +63,7 @@ done
 echo "SRC =""${src_[@]}" >> $Makefile
 echo "OBJ ="$'\t'"\$(SRC:.c=.o)"$'\n' >> $Makefile
 echo "\$(EXEC): \$(OBJ)"$'\n\t'"\$(CC) \$(CFLAGS) \$(LDFLAGS) -o \$(EXEC) -I \$(HEADERS_DIR) -L \$(LIBS_DIR) \$(OBJ)"$'\n' >> $Makefile
-echo "all : \$(NAME)"$'\n' >> $Makefile
+echo "all : \$(EXEC)"$'\n' >> $Makefile
 echo "clean :"$'\n\t'"rm -f \$(OBJ)"$'\n' >> $Makefile
 echo "fclean : clean"$'\n\t'"rm -f \$(EXEC)"$'\n\t'"rm -f *~ *# *.gcno *.gcda"$'\n' >> $Makefile
 echo "re : fclean all"$'\n' >> $Makefile
